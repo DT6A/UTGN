@@ -262,6 +262,7 @@ def _encoder_layer(x,
         x = _layer_norm(added)
 
     transition_func = config['transition_function']
+    print(transition_func)
     with tf.variable_scope(transition_func + "_" + str(layer_num)):
 
         for case in switch(transition_func):

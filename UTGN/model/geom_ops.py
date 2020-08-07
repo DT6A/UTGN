@@ -399,11 +399,14 @@ def drmsd(u, v, weights, name=None):
     with tf.name_scope(name, 'dRMSD', [u, v, weights]) as scope:
         u = tf.convert_to_tensor(u, name='u')
         v = tf.convert_to_tensor(v, name='v')
+        #u = tf.Print(u, [tf.shape(u)], 'Predicted:', summarize=-1)
+        #v = tf.Print(v, [tf.shape(v)], 'Target:', summarize=-1)
         weights = tf.convert_to_tensor(weights, name='weights')
-
+        
         # [NUM_STEPS, NUM_STEPS, BATCH_SIZE]
         diffs = pairwise_distance(u) - pairwise_distance(v)
-        # [BATCH_SIZE]
+ 
+       # [BATCH_SIZE]
         norms = reduce_l2_norm(diffs,
                                reduction_indices=[0, 1],
                                weights=weights,

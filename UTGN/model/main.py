@@ -225,10 +225,11 @@ def predict_and_log(log_dir, configs, models, session):
                                     outputs_dir,
                                     idx.decode("utf-8") + '.tertiary'), 
                                 dict_['tertiary'], header='\n')
-                        # if 'recurrent_states' in dict_:
-                        #     np.savetxt(
-                        #         os.path.join(outputs_dir, idx + '.recurrent_states'), 
-                        #         dict_['recurrent_states'])
+                        if 'recurrent_states' in dict_ and idx is not None:
+                            print(idx, type(idx))
+                            np.savetxt(
+                                os.path.join(outputs_dir, idx.decode("utf-8") + '.recurrent_states'), 
+                                dict_['recurrent_states'])
 
 def run_model(args):
     """Either train a model or use it to predict.
@@ -517,11 +518,11 @@ def run_model(args):
         # clean up post last checkpoint residue if any
         if global_step != 0:
             # remove future directories
-            last_log_step = sorted(
-                [int(os.path.basename(os.path.normpath(dir))) \
-                for dir in glob(os.path.join(run_dir, '*[0-9]'))])[-1]
-            for step in range(current_log_step + 1, last_log_step + 1): 
-                rmtree(os.path.join(run_dir, str(step))) 
+            #last_log_step = sorted(
+            #    [int(os.path.basename(os.path.normpath(dir))) \
+            #    for dir in glob(os.path.join(run_dir, '*[0-9]'))])[-1]
+            #for step in range(current_log_step + 1, last_log_step + 1): 
+            #    rmtree(os.path.join(run_dir, str(step))) 
 
             # remove future log entries in current log files
             log_file = os.path.join(log_dir, 'error.log')

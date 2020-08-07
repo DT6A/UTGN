@@ -1,6 +1,5 @@
 #!/usr/bin/python
 """Parses a text file and converts it into a tfrecord.
-
 Command-line arguments:
     input file
     output file
@@ -57,7 +56,7 @@ class switch(object):
     def __iter__(self):
         """Return the match method once, then stop """
         yield self.match
-        raise StopIteration
+        return
 
     def match(self, *args):
         """Indicate whether or not to enter a case suite """
@@ -101,6 +100,7 @@ def read_record(file_, num_evo_entries):
         for case in switch(next_line):
             if case('[ID]' + '\n'):
                 id_ = file_.readline()[:-1]
+                #print(id_)
                 dict_.update({'id': id_})
             elif case('[PRIMARY]' + '\n'):
                 primary = letter_to_num(file_.readline()[:-1], _aa_dict)

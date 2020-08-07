@@ -194,11 +194,16 @@ class RGNModel(object):
             ids, primaries, evolutionaries, secondaries, tertiaries, \
                 masks, num_stepss = _dataflow(dataflow_config, max_length)
 
+
             # Set up inputs
             inputs = _inputs(
                 merge_dicts(config.architecture, config.initialization),
                 primaries,
                 evolutionaries)
+
+            #if mode == 'training':
+               #inputs = tf.Print(inputs, [ids], 'Primes: ', summarize=-1)
+            #inputs = tf.Print(inputs, [tf.shape(inputs)], 'Input shapes')
 
             # Compute dRMSD weights 
             # Masks out meaningless (longer than sequence) pairwise distances 
@@ -237,14 +242,17 @@ class RGNModel(object):
                         config.optimization)
 
                     inputs2 = tf.transpose(inputs, perm=[1,0,2])
+                    #inputs2 = tf.Print(inputs2, [tf.shape(inputs2)], 'Inputs transposed:')
                     recurrent_outputs = transformer._encoder_model(
                         inputs2,
                         transformer_config,
                         mode
                     )
+                    recurrent_outputs = tf.Print(recurrent_outputs, [tf.shape(recurrent_outputs)], 'Rec. outputs tr:')
                     recurrent_outputs = tf.transpose(
                         recurrent_outputs,
                         perm=[1,0,2])
+                    recurrent_states = recurrent_outputs
                 elif case('recurrent'):
                     # Create recurrent layer(s) that translate 
                     # primary sequences into internal representation
@@ -293,6 +301,8 @@ class RGNModel(object):
                     recurrent_outputs,
                     alphabet=alphabet)
 
+
+                #tertiaries = tf.Print(tertiaries, [tf.shape(tertiaries)], 'Terts:')
                 # Convert dihedrals into full 3D structures and compute dRMSDs
                 coordinates = _coordinates(
                     merge_dicts(
@@ -313,8 +323,8 @@ class RGNModel(object):
                     prediction_ops.update({
                         'ids': ids,
                         'coordinates': coordinates,
-                        'num_stepss': num_stepss,})
-                        # 'recurrent_states': recurrent_states})
+                        'num_stepss': num_stepss,
+                        'recurrent_states': recurrent_states})
 
             # Losses
             if config.loss['include']:
@@ -675,7 +685,8 @@ class RGNModel(object):
             # retrieve latest checkpoint, if any
             latest_checkpoint = tf.train.latest_checkpoint(
                 self.config.io['checkpoints_directory'])
-
+            print('---------------------------------------------------------')
+            print(self.config.io['checkpoints_directory'])
             # restore latest checkpoint if found, initialize from scratch otherwise.
             if not restore_if_checkpointed or latest_checkpoint is None:
                 tf.global_variables_initializer().run(session=session)
@@ -813,6 +824,7 @@ def _dataflow(config, max_length):
     else:
         files = glob(config['data_files_glob'])
 
+    print(files)
     # files queue
     file_queue = tf.train.string_input_producer(
         files,
@@ -828,7 +840,7 @@ def _dataflow(config, max_length):
         max_length,
         config['num_edge_residues'], 
         config['num_evo_entries'])
-
+    #inputs = tf.Print(inputs, [inputs], message="INPUTS DATA")
     # randomization
     # https://github.com/tensorflow/tensorflow/issues/5147#issuecomment-271086206
     if config['shuffle']:
@@ -914,7 +926,7 @@ def _dataflow(config, max_length):
     # assign names to the nameless
     ids = tf.identity(ids, name='ids')
     num_stepss = tf.identity(num_stepss, name='num_stepss')
-
+    ids = tf.Print(ids, [ids], message="!!!!!!!!!!!!IDS DATA!!!!!!!!!!!!!!!!!")
     return ids, primaries, evolutionaries, secondaries, tertiaries, masks, num_stepss
 
 def _inputs(config, primaries, evolutionaries):
@@ -1208,7 +1220,7 @@ def _dihedrals(mode, config, inputs, alphabet=None):
             dtype=tf.float32, 
             name='angle_shift'), 
         name='dihedrals')
-
+    #dihedrals = tf.Print(dihedrals, [tf.shape(dihedrals)], 'Dihedrals:')
     return dihedrals
 
 def _coordinates(config, dihedrals):
@@ -1231,7 +1243,7 @@ def _coordinates(config, dihedrals):
         points,
         num_fragments=config['num_reconstruction_fragments'],
         parallel_iterations=config['num_reconstruction_parallel_iters'])
-
+    #coordinates = tf.Print(coordinates, [tf.shape(coordinates)], "Coords:")
     return coordinates
 
 def _drmsds(config, coordinates, targets, weights):
